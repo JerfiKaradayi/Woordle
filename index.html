@@ -2,40 +2,57 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <title>Woordle - Maak je eigen puzzel!</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html {
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     background: #121213;
     color: #fff;
-    min-height: 100vh;
+    height: 100%;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   header {
     width: 100%;
     max-width: 500px;
     text-align: center;
-    padding: 12px 0;
+    padding: 8px 0;
     border-bottom: 1px solid #3a3a3c;
+    flex-shrink: 0;
   }
 
   header h1 {
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 800;
     letter-spacing: 4px;
     text-transform: uppercase;
   }
 
   header p {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #818384;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   /* Setup screen */
@@ -66,7 +83,7 @@
     width: 100%;
     max-width: 300px;
     padding: 14px 18px;
-    font-size: 1.3rem;
+    font-size: 16px; /* 16px prevents iOS zoom */
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 8px;
@@ -77,6 +94,8 @@
     color: #fff;
     outline: none;
     transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   #setup-screen input:focus {
@@ -91,8 +110,8 @@
   }
 
   .btn {
-    padding: 14px 32px;
-    font-size: 1rem;
+    padding: 14px 28px;
+    font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -100,6 +119,10 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   .btn-primary {
@@ -109,6 +132,10 @@
 
   .btn-primary:hover {
     background: #6aaa64;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.97);
   }
 
   .btn-primary:disabled {
@@ -146,17 +173,18 @@
     border: 2px solid #3a3a3c;
     border-radius: 8px;
     padding: 14px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #d7dadc;
     word-break: break-all;
     margin-bottom: 16px;
     line-height: 1.5;
     user-select: all;
+    -webkit-user-select: all;
   }
 
   .btn-row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -168,6 +196,10 @@
 
   .btn-secondary:hover {
     background: #4a4a4c;
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.97);
   }
 
   .copied-msg {
@@ -190,30 +222,37 @@
     width: 100%;
     max-width: 500px;
     flex: 1;
-    padding: 0 8px;
+    padding: 0 4px;
+    overflow: hidden;
   }
 
   .challenge-banner {
     background: linear-gradient(135deg, #538d4e22, #b59f3b22);
     border: 1px solid #3a3a3c;
     border-radius: 8px;
-    padding: 10px 16px;
-    margin: 12px 0;
+    padding: 8px 14px;
+    margin: 8px 0;
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #d7dadc;
-  }
-
-  .challenge-banner strong {
-    color: #6aaa64;
+    flex-shrink: 0;
   }
 
   /* Board */
+  #board-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    padding: 4px 0;
+  }
+
   #board {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    margin: 16px 0;
   }
 
   .row {
@@ -222,17 +261,18 @@
   }
 
   .tile {
-    width: 62px;
-    height: 62px;
+    width: var(--tile-size, 56px);
+    height: var(--tile-size, 56px);
     border: 2px solid #3a3a3c;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: var(--tile-font, 1.8rem);
     font-weight: 700;
     text-transform: uppercase;
     transition: transform 0.1s;
     user-select: none;
+    -webkit-user-select: none;
   }
 
   .tile.filled {
@@ -290,9 +330,10 @@
   #keyboard {
     width: 100%;
     max-width: 500px;
-    padding: 0 4px;
+    padding: 0 2px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
     margin-top: auto;
-    margin-bottom: 12px;
+    flex-shrink: 0;
   }
 
   .kb-row {
@@ -303,35 +344,38 @@
   }
 
   .key {
-    height: 58px;
-    min-width: 32px;
-    padding: 0 6px;
+    height: 52px;
+    min-width: 28px;
+    padding: 0 4px;
     border: none;
     border-radius: 4px;
     background: #818384;
     color: #fff;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     text-transform: uppercase;
-    transition: background 0.2s;
+    transition: background 0.15s;
     flex: 1;
     max-width: 44px;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   .key:active {
-    opacity: 0.8;
+    opacity: 0.7;
+    transform: scale(0.95);
   }
 
   .key.wide {
-    min-width: 56px;
+    min-width: 48px;
     max-width: 65px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .key.correct { background: #538d4e; }
@@ -341,7 +385,7 @@
   /* Toast */
   #toast-container {
     position: fixed;
-    top: 80px;
+    top: 70px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
@@ -360,6 +404,7 @@
     font-size: 0.9rem;
     animation: fadeIn 0.2s, fadeOut 0.3s 1.5s forwards;
     pointer-events: none;
+    white-space: nowrap;
   }
 
   @keyframes fadeIn {
@@ -371,51 +416,79 @@
     to { opacity: 0; }
   }
 
+  /* Confetti canvas */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    pointer-events: none;
+  }
+
   /* End screen */
   #end-overlay {
     display: none;
     position: fixed;
     inset: 0;
     background: rgba(18,18,19,0.85);
-    z-index: 999;
+    z-index: 1002;
     justify-content: center;
     align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .end-card {
     background: #1a1a1b;
     border: 1px solid #3a3a3c;
     border-radius: 12px;
-    padding: 32px;
+    padding: 24px 20px;
     text-align: center;
     max-width: 380px;
-    width: 90%;
+    width: 100%;
   }
 
   .end-card h2 {
-    font-size: 1.6rem;
-    margin-bottom: 8px;
+    font-size: 1.5rem;
+    margin-bottom: 6px;
   }
 
   .end-card p {
     color: #818384;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
   }
 
   .end-card .answer-reveal {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
     letter-spacing: 6px;
     text-transform: uppercase;
     color: #6aaa64;
-    margin: 16px 0;
+    margin: 12px 0;
+  }
+
+  .win-gif {
+    width: 200px;
+    height: auto;
+    border-radius: 12px;
+    margin: 12px auto;
+    display: block;
+  }
+
+  .lose-gif {
+    width: 200px;
+    height: auto;
+    border-radius: 12px;
+    margin: 12px auto;
+    display: block;
   }
 
   .stats-row {
     display: flex;
     justify-content: center;
     gap: 24px;
-    margin: 20px 0;
+    margin: 14px 0;
   }
 
   .stat {
@@ -423,7 +496,7 @@
   }
 
   .stat .num {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
   }
 
@@ -438,21 +511,31 @@
     background: #1a1a1b;
     border: 1px solid #3a3a3c;
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
     color: #d7dadc;
     font-family: monospace;
-    font-size: 1.1rem;
+    font-size: 1rem;
     line-height: 1.4;
     white-space: pre;
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Responsive */
-  @media (max-width: 400px) {
-    .tile { width: 52px; height: 52px; font-size: 1.6rem; }
-    .key { height: 52px; font-size: 0.75rem; }
+  /* Small phones */
+  @media (max-height: 700px) {
+    header { padding: 4px 0; }
+    header h1 { font-size: 1.3rem; }
+    header p { display: none; }
+    .challenge-banner { margin: 4px 0; padding: 6px 10px; font-size: 0.75rem; }
+    .key { height: 44px; font-size: 0.75rem; }
+    .key.wide { font-size: 0.6rem; }
+  }
+
+  @media (max-width: 360px) {
+    .key { height: 44px; min-width: 24px; font-size: 0.7rem; }
+    .kb-row { gap: 3px; }
   }
 </style>
 </head>
@@ -467,7 +550,7 @@
 <div id="setup-screen">
   <h2>Kies een woord</h2>
   <p>Typ een woord dat je vrienden moeten raden. Het woord wordt verborgen in de link!</p>
-  <input type="text" id="word-input" placeholder="WOORD" maxlength="8" autocomplete="off" spellcheck="false">
+  <input type="text" id="word-input" placeholder="WOORD" maxlength="8" autocomplete="off" spellcheck="false" autocapitalize="characters">
   <div class="word-length-info" id="word-length-info">3 tot 8 letters</div>
   <button class="btn btn-primary" id="create-btn" disabled>Link maken</button>
 </div>
@@ -479,6 +562,7 @@
   <div class="link-box" id="share-link"></div>
   <div class="btn-row">
     <button class="btn btn-primary" id="copy-btn">Kopieer link</button>
+    <button class="btn btn-secondary" id="share-native-btn" style="display:none">Delen</button>
     <button class="btn btn-secondary" id="play-self-btn">Zelf spelen</button>
     <button class="btn btn-secondary" id="new-word-btn">Nieuw woord</button>
   </div>
@@ -490,7 +574,9 @@
   <div class="challenge-banner" id="challenge-banner" style="display:none;">
     Iemand daagt je uit! Raad het woord!
   </div>
-  <div id="board"></div>
+  <div id="board-wrapper">
+    <div id="board"></div>
+  </div>
   <div id="keyboard"></div>
 </div>
 
@@ -499,6 +585,7 @@
   <div class="end-card">
     <h2 id="end-title"></h2>
     <p id="end-subtitle"></p>
+    <img id="end-gif" class="win-gif" src="" alt="" style="display:none">
     <div class="answer-reveal" id="answer-reveal"></div>
     <div class="stats-row">
       <div class="stat">
@@ -515,28 +602,106 @@
   </div>
 </div>
 
+<canvas id="confetti-canvas"></canvas>
 <div id="toast-container"></div>
 
 <script>
-// ---- Encoding/Decoding (simple obfuscation so word isn't visible in URL) ----
+// ---- Prevent iOS zoom on double-tap ----
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+// Prevent pinch zoom
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+
+// ---- Confetti System ----
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+let confettiParticles = [];
+let confettiAnimId = null;
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfetti);
+resizeConfetti();
+
+function launchConfetti() {
+  confettiParticles = [];
+  const colors = ['#538d4e', '#b59f3b', '#6aaa64', '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff922b', '#e599f7', '#fff'];
+
+  for (let i = 0; i < 150; i++) {
+    confettiParticles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -20 - Math.random() * confettiCanvas.height,
+      w: 6 + Math.random() * 8,
+      h: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 6,
+      vy: 2 + Math.random() * 4,
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 12,
+      opacity: 1,
+      wobble: Math.random() * 10,
+      wobbleSpeed: 0.03 + Math.random() * 0.05,
+      wobblePhase: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function drawConfetti() {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    let alive = false;
+
+    confettiParticles.forEach(p => {
+      if (p.opacity <= 0) return;
+      alive = true;
+
+      p.wobblePhase += p.wobbleSpeed;
+      p.x += p.vx + Math.sin(p.wobblePhase) * 0.5;
+      p.y += p.vy;
+      p.rotation += p.rotSpeed;
+      p.vy += 0.04;
+
+      if (p.y > confettiCanvas.height + 20) {
+        p.opacity -= 0.02;
+      }
+
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate((p.rotation * Math.PI) / 180);
+      confettiCtx.globalAlpha = Math.max(0, p.opacity);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confettiCtx.restore();
+    });
+
+    if (alive) {
+      confettiAnimId = requestAnimationFrame(drawConfetti);
+    } else {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+  }
+
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  drawConfetti();
+}
+
+// ---- Encoding/Decoding ----
 function encodeWord(word) {
-  const shifted = word.split('').map(c => {
-    const code = c.charCodeAt(0);
-    return String.fromCharCode(code + 3);
-  }).join('');
+  const shifted = word.split('').map(c => String.fromCharCode(c.charCodeAt(0) + 3)).join('');
   return btoa(unescape(encodeURIComponent(shifted)));
 }
 
 function decodeWord(encoded) {
   try {
     const shifted = decodeURIComponent(escape(atob(encoded)));
-    return shifted.split('').map(c => {
-      const code = c.charCodeAt(0);
-      return String.fromCharCode(code - 3);
-    }).join('');
-  } catch {
-    return null;
-  }
+    return shifted.split('').map(c => String.fromCharCode(c.charCodeAt(0) - 3)).join('');
+  } catch { return null; }
 }
 
 // ---- State ----
@@ -548,8 +713,8 @@ let currentCol = 0;
 let guesses = [];
 let currentGuess = '';
 let gameOver = false;
-let revealedRows = new Set();
 let keyStates = {};
+let inputLocked = false;
 
 // ---- DOM refs ----
 const setupScreen = document.getElementById('setup-screen');
@@ -559,6 +724,7 @@ const wordInput = document.getElementById('word-input');
 const createBtn = document.getElementById('create-btn');
 const shareLink = document.getElementById('share-link');
 const copyBtn = document.getElementById('copy-btn');
+const shareNativeBtn = document.getElementById('share-native-btn');
 const playSelfBtn = document.getElementById('play-self-btn');
 const newWordBtn = document.getElementById('new-word-btn');
 const copiedMsg = document.getElementById('copied-msg');
@@ -567,6 +733,11 @@ const keyboard = document.getElementById('keyboard');
 const challengeBanner = document.getElementById('challenge-banner');
 const endOverlay = document.getElementById('end-overlay');
 const wordLengthInfo = document.getElementById('word-length-info');
+
+// ---- Native Share API (mobile) ----
+if (navigator.share) {
+  shareNativeBtn.style.display = '';
+}
 
 // ---- Setup ----
 wordInput.addEventListener('input', () => {
@@ -581,18 +752,14 @@ wordInput.addEventListener('input', () => {
 });
 
 wordInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !createBtn.disabled) {
-    createBtn.click();
-  }
+  if (e.key === 'Enter' && !createBtn.disabled) createBtn.click();
 });
 
 createBtn.addEventListener('click', () => {
   const word = wordInput.value.trim().toUpperCase();
   if (word.length < 3) return;
-
   const encoded = encodeWord(word);
   const url = `${location.origin}${location.pathname}?w=${encoded}`;
-
   shareLink.textContent = url;
   setupScreen.style.display = 'none';
   linkScreen.style.display = 'flex';
@@ -605,9 +772,16 @@ copyBtn.addEventListener('click', () => {
   });
 });
 
+shareNativeBtn.addEventListener('click', () => {
+  navigator.share({
+    title: 'Woordle - Raad mijn woord!',
+    text: 'Kun jij mijn woord raden? Probeer het hier:',
+    url: shareLink.textContent
+  }).catch(() => {});
+});
+
 playSelfBtn.addEventListener('click', () => {
-  const word = wordInput.value.trim().toUpperCase();
-  startGame(word);
+  startGame(wordInput.value.trim().toUpperCase());
 });
 
 newWordBtn.addEventListener('click', () => {
@@ -619,7 +793,7 @@ newWordBtn.addEventListener('click', () => {
   wordLengthInfo.textContent = '3 tot 8 letters';
 });
 
-// ---- Check URL for word ----
+// ---- Check URL ----
 function checkURL() {
   const params = new URLSearchParams(location.search);
   const encoded = params.get('w');
@@ -629,33 +803,51 @@ function checkURL() {
       setupScreen.style.display = 'none';
       challengeBanner.style.display = 'block';
       startGame(word.toUpperCase());
-      return;
     }
   }
+}
+
+// ---- Calculate tile size ----
+function calcTileSize() {
+  const vh = window.innerHeight;
+  const headerH = 50;
+  const bannerH = challengeBanner.style.display !== 'none' ? 44 : 0;
+  const kbH = 180;
+  const gaps = MAX_GUESSES * 5 + 20;
+  const available = vh - headerH - bannerH - kbH - gaps;
+  const tileFromHeight = Math.floor(available / MAX_GUESSES);
+  const maxWidth = Math.min(window.innerWidth - 16, 500);
+  const tileFromWidth = Math.floor((maxWidth - (WORD_LENGTH - 1) * 5) / WORD_LENGTH);
+  const tileSize = Math.min(tileFromHeight, tileFromWidth, 62);
+  const finalSize = Math.max(tileSize, 36);
+  document.documentElement.style.setProperty('--tile-size', finalSize + 'px');
+  document.documentElement.style.setProperty('--tile-font', Math.max(finalSize * 0.5, 14) + 'px');
 }
 
 // ---- Game Logic ----
 function startGame(word) {
   SECRET = word;
   WORD_LENGTH = word.length;
-  MAX_GUESSES = WORD_LENGTH + 1;
+  MAX_GUESSES = Math.min(WORD_LENGTH + 1, 7);
   currentRow = 0;
   currentCol = 0;
   guesses = [];
   currentGuess = '';
   gameOver = false;
-  revealedRows = new Set();
   keyStates = {};
+  inputLocked = false;
 
   setupScreen.style.display = 'none';
   linkScreen.style.display = 'none';
   gameScreen.style.display = 'flex';
   endOverlay.style.display = 'none';
 
+  calcTileSize();
   buildBoard();
   buildKeyboard();
 
   document.addEventListener('keydown', handleKeydown);
+  window.addEventListener('resize', calcTileSize);
 }
 
 function buildBoard() {
@@ -691,7 +883,10 @@ function buildKeyboard() {
       btn.className = 'key' + (key === 'enter' || key === '⌫' ? ' wide' : '');
       btn.textContent = key;
       btn.dataset.key = key;
-      btn.addEventListener('click', () => handleInput(key));
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleInput(key);
+      });
       kbRow.appendChild(btn);
     });
     keyboard.appendChild(kbRow);
@@ -699,20 +894,15 @@ function buildKeyboard() {
 }
 
 function handleKeydown(e) {
-  if (gameOver) return;
+  if (gameOver || inputLocked) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-  if (e.key === 'Enter') {
-    handleInput('enter');
-  } else if (e.key === 'Backspace') {
-    handleInput('⌫');
-  } else if (/^[a-zA-Z]$/.test(e.key)) {
-    handleInput(e.key.toLowerCase());
-  }
+  if (e.key === 'Enter') handleInput('enter');
+  else if (e.key === 'Backspace') handleInput('⌫');
+  else if (/^[a-zA-Z]$/.test(e.key)) handleInput(e.key.toLowerCase());
 }
 
 function handleInput(key) {
-  if (gameOver) return;
+  if (gameOver || inputLocked) return;
 
   if (key === '⌫') {
     if (currentGuess.length > 0) {
@@ -736,8 +926,7 @@ function handleInput(key) {
   if (currentGuess.length < WORD_LENGTH) {
     currentGuess += key;
     setTile(currentRow, currentCol, key);
-    const tile = getTile(currentRow, currentCol);
-    tile.classList.add('filled');
+    getTile(currentRow, currentCol).classList.add('filled');
     currentCol++;
   }
 }
@@ -753,9 +942,9 @@ function getTile(row, col) {
 }
 
 function submitGuess() {
+  inputLocked = true;
   const guess = currentGuess.toUpperCase();
   guesses.push(guess);
-
   const result = evaluateGuess(guess);
   revealRow(currentRow, result);
 }
@@ -765,7 +954,6 @@ function evaluateGuess(guess) {
   const secretArr = SECRET.split('');
   const guessArr = guess.split('');
 
-  // First pass: correct
   for (let i = 0; i < WORD_LENGTH; i++) {
     if (guessArr[i] === secretArr[i]) {
       result[i] = 'correct';
@@ -773,8 +961,6 @@ function evaluateGuess(guess) {
       guessArr[i] = null;
     }
   }
-
-  // Second pass: present
   for (let i = 0; i < WORD_LENGTH; i++) {
     if (guessArr[i] === null) continue;
     const idx = secretArr.indexOf(guessArr[i]);
@@ -783,7 +969,6 @@ function evaluateGuess(guess) {
       secretArr[idx] = null;
     }
   }
-
   return result;
 }
 
@@ -799,43 +984,41 @@ function revealRow(row, result) {
       tile.classList.add('reveal');
       setTimeout(() => {
         tile.classList.add(state);
-        // Update keyboard
         updateKeyState(letter, state);
       }, 250);
-    }, c * 300);
+    }, c * 250);
   }
+
+  const revealTime = WORD_LENGTH * 250 + 300;
 
   setTimeout(() => {
     const won = result.every(r => r === 'correct');
     if (won) {
-      // Bounce animation
       for (let c = 0; c < WORD_LENGTH; c++) {
         const tile = getTile(row, c);
         setTimeout(() => {
-          tile.style.animation = `bounce 0.5s ${c * 100}ms`;
+          tile.style.animation = `bounce 0.5s ${c * 80}ms`;
         }, 100);
       }
-      setTimeout(() => endGame(true), 800);
+      launchConfetti();
+      setTimeout(() => endGame(true), 1000);
     } else if (currentRow >= MAX_GUESSES - 1) {
       setTimeout(() => endGame(false), 500);
     } else {
       currentRow++;
       currentCol = 0;
       currentGuess = '';
+      inputLocked = false;
     }
-  }, WORD_LENGTH * 300 + 300);
+  }, revealTime);
 }
 
 function updateKeyState(letter, state) {
   const priority = { 'absent': 0, 'present': 1, 'correct': 2 };
   const current = keyStates[letter];
-  if (!current || priority[state] > priority[current]) {
-    keyStates[letter] = state;
-  }
+  if (!current || priority[state] > priority[current]) keyStates[letter] = state;
   const keyEl = keyboard.querySelector(`.key[data-key="${letter}"]`);
-  if (keyEl) {
-    keyEl.className = 'key' + (keyStates[letter] ? ` ${keyStates[letter]}` : '');
-  }
+  if (keyEl) keyEl.className = 'key' + (keyStates[letter] ? ` ${keyStates[letter]}` : '');
 }
 
 function shakeRow(row) {
@@ -857,22 +1040,41 @@ function showToast(msg) {
 function endGame(won) {
   gameOver = true;
 
-  const messages = won
-    ? ['Geniaal!', 'Geweldig!', 'Sterk!', 'Goed gedaan!', 'Net op tijd!', 'Phew!']
-    : ['Helaas!'];
+  const winMessages = ['Geniaal!', 'Geweldig!', 'Sterk!', 'Goed gedaan!', 'Net op tijd!', 'Phew!'];
+  const loseMessages = ['Helaas!'];
 
   document.getElementById('end-title').textContent = won
-    ? messages[Math.min(currentRow, messages.length - 1)]
-    : messages[0];
+    ? winMessages[Math.min(currentRow, winMessages.length - 1)]
+    : loseMessages[0];
 
   document.getElementById('end-subtitle').textContent = won
     ? `Je raadde het in ${currentRow + 1} ${currentRow === 0 ? 'poging' : 'pogingen'}!`
     : 'Volgende keer beter!';
 
+  // Fun GIFs
+  const endGif = document.getElementById('end-gif');
+  const winGifs = [
+    'https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif',
+    'https://media.giphy.com/media/3ohzAu2U1tOafteBa0/giphy.gif',
+    'https://media.giphy.com/media/xT0GqssRweIhlz209i/giphy.gif',
+    'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',
+  ];
+  const loseGifs = [
+    'https://media.giphy.com/media/d2lcHJTG5Tscg/giphy.gif',
+    'https://media.giphy.com/media/3o7TKr3nzbh5WgCFxe/giphy.gif',
+    'https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif',
+  ];
+
+  const gifs = won ? winGifs : loseGifs;
+  const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
+  endGif.src = randomGif;
+  endGif.className = won ? 'win-gif' : 'lose-gif';
+  endGif.style.display = 'block';
+  endGif.alt = won ? 'Feest!' : 'Jammer!';
+
   document.getElementById('answer-reveal').textContent = SECRET;
   document.getElementById('stat-tries').textContent = won ? currentRow + 1 : 'X';
 
-  // Build share text
   const emojiGrid = guesses.map(guess => {
     const result = evaluateGuess(guess);
     return result.map(r => r === 'correct' ? '🟩' : r === 'present' ? '🟨' : '⬛').join('');
@@ -882,11 +1084,15 @@ function endGame(won) {
   document.getElementById('share-result').textContent = shareText;
 
   document.getElementById('share-result-btn').onclick = () => {
-    navigator.clipboard.writeText(shareText).then(() => {
-      const msg = document.getElementById('copied-result-msg');
-      msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 2000);
-    });
+    if (navigator.share) {
+      navigator.share({ text: shareText }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText).then(() => {
+        const msg = document.getElementById('copied-result-msg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      });
+    }
   };
 
   document.getElementById('play-again-btn').onclick = () => {
@@ -897,13 +1103,13 @@ function endGame(won) {
     wordInput.focus();
     createBtn.disabled = true;
     wordLengthInfo.textContent = '3 tot 8 letters';
-    // Clear URL param
     history.replaceState(null, '', location.pathname);
+    window.removeEventListener('resize', calcTileSize);
   };
 
   setTimeout(() => {
     endOverlay.style.display = 'flex';
-  }, 500);
+  }, 600);
 }
 
 // ---- Init ----
