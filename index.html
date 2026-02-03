@@ -283,11 +283,13 @@
   .tile.correct {
     background: #538d4e;
     border-color: #538d4e;
+    animation: flip 0.6s ease forwards, glowGreen 0.8s 0.6s ease forwards;
   }
 
   .tile.present {
     background: #b59f3b;
     border-color: #b59f3b;
+    animation: flip 0.6s ease forwards, glowYellow 0.6s 0.6s ease forwards;
   }
 
   .tile.absent {
@@ -295,8 +297,20 @@
     border-color: #3a3a3c;
   }
 
+  @keyframes glowGreen {
+    0% { box-shadow: 0 0 0 0 rgba(106, 170, 100, 0); transform: scale(1); }
+    40% { box-shadow: 0 0 16px 4px rgba(106, 170, 100, 0.6); transform: scale(1.1); }
+    100% { box-shadow: 0 0 6px 1px rgba(106, 170, 100, 0.2); transform: scale(1); }
+  }
+
+  @keyframes glowYellow {
+    0% { box-shadow: 0 0 0 0 rgba(181, 159, 59, 0); transform: scale(1); }
+    40% { box-shadow: 0 0 12px 3px rgba(181, 159, 59, 0.5); transform: scale(1.05); }
+    100% { box-shadow: 0 0 4px 1px rgba(181, 159, 59, 0.15); transform: scale(1); }
+  }
+
   .tile.reveal {
-    animation: flip 0.35s ease forwards;
+    animation: flip 0.6s ease forwards;
   }
 
   @keyframes pop {
@@ -1051,11 +1065,11 @@ function revealRow(row, result) {
       setTimeout(() => {
         tile.classList.add(state);
         updateKeyState(letter, state);
-      }, 200);
-    }, c * 180);
+      }, 300);
+    }, c * 350);
   }
 
-  const revealTime = WORD_LENGTH * 180 + 250;
+  const revealTime = WORD_LENGTH * 350 + 400;
 
   setTimeout(() => {
     const won = result.every(r => r === 'correct');
