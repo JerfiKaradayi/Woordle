@@ -296,7 +296,7 @@
   }
 
   .tile.reveal {
-    animation: flip 0.5s ease forwards;
+    animation: flip 0.35s ease forwards;
   }
 
   @keyframes pop {
@@ -875,6 +875,7 @@ function buildKeyboard() {
     ['enter','z','x','c','v','b','n','m','⌫']
   ];
 
+  // Use event delegation on keyboard for max speed
   rows.forEach(row => {
     const kbRow = document.createElement('div');
     kbRow.className = 'kb-row';
@@ -883,13 +884,28 @@ function buildKeyboard() {
       btn.className = 'key' + (key === 'enter' || key === '⌫' ? ' wide' : '');
       btn.textContent = key;
       btn.dataset.key = key;
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        handleInput(key);
-      });
       kbRow.appendChild(btn);
     });
     keyboard.appendChild(kbRow);
+  });
+
+  // Fast touch: use touchstart with delegation (no 300ms click delay)
+  keyboard.addEventListener('touchstart', (e) => {
+    const key = e.target.closest('.key');
+    if (!key) return;
+    e.preventDefault();
+    key.style.opacity = '0.7';
+    handleInput(key.dataset.key);
+    setTimeout(() => { key.style.opacity = ''; }, 80);
+  }, { passive: false });
+
+  // Fallback for desktop: mousedown (faster than click)
+  keyboard.addEventListener('mousedown', (e) => {
+    if ('ontouchstart' in window) return; // skip on touch devices
+    const key = e.target.closest('.key');
+    if (!key) return;
+    e.preventDefault();
+    handleInput(key.dataset.key);
   });
 }
 
@@ -985,11 +1001,11 @@ function revealRow(row, result) {
       setTimeout(() => {
         tile.classList.add(state);
         updateKeyState(letter, state);
-      }, 250);
-    }, c * 250);
+      }, 200);
+    }, c * 180);
   }
 
-  const revealTime = WORD_LENGTH * 250 + 300;
+  const revealTime = WORD_LENGTH * 180 + 250;
 
   setTimeout(() => {
     const won = result.every(r => r === 'correct');
