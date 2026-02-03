@@ -691,6 +691,34 @@ function launchConfetti() {
   drawConfetti();
 }
 
+// ---- Word Validation (NL + EN dictionary) ----
+const wordCache = new Map();
+
+async function isValidWord(word) {
+  const lower = word.toLowerCase();
+  if (wordCache.has(lower)) return wordCache.get(lower);
+
+  // Check both Dutch and English dictionaries in parallel
+  try {
+    const [nlResult, enResult] = await Promise.allSettled([
+      fetch(`https://nl.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(lower)}&format=json&origin=*`)
+        .then(r => r.json())
+        .then(data => !data.query.pages['-1']),
+      fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(lower)}`)
+        .then(r => r.ok)
+    ]);
+
+    const nlValid = nlResult.status === 'fulfilled' && nlResult.value === true;
+    const enValid = enResult.status === 'fulfilled' && enResult.value === true;
+    const valid = nlValid || enValid;
+    wordCache.set(lower, valid);
+    return valid;
+  } catch {
+    // If both APIs fail, allow the word (don't block gameplay)
+    return true;
+  }
+}
+
 // ---- Encoding/Decoding ----
 function encodeWord(word) {
   const shifted = word.split('').map(c => String.fromCharCode(c.charCodeAt(0) + 3)).join('');
@@ -755,14 +783,27 @@ wordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !createBtn.disabled) createBtn.click();
 });
 
-createBtn.addEventListener('click', () => {
+createBtn.addEventListener('click', async () => {
   const word = wordInput.value.trim().toUpperCase();
   if (word.length < 3) return;
+
+  createBtn.disabled = true;
+  createBtn.textContent = 'Checken...';
+
+  const valid = await isValidWord(word);
+  if (!valid) {
+    showToast('Geen geldig woord! Probeer een ander woord.');
+    createBtn.disabled = false;
+    createBtn.textContent = 'LINK MAKEN';
+    return;
+  }
+
   const encoded = encodeWord(word);
   const url = `${location.origin}${location.pathname}?w=${encoded}`;
   shareLink.textContent = url;
   setupScreen.style.display = 'none';
   linkScreen.style.display = 'flex';
+  createBtn.textContent = 'LINK MAKEN';
 });
 
 copyBtn.addEventListener('click', () => {
@@ -957,9 +998,18 @@ function getTile(row, col) {
   return board.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
 }
 
-function submitGuess() {
+async function submitGuess() {
   inputLocked = true;
   const guess = currentGuess.toUpperCase();
+
+  const valid = await isValidWord(guess);
+  if (!valid) {
+    showToast('Geen geldig woord!');
+    shakeRow(currentRow);
+    inputLocked = false;
+    return;
+  }
+
   guesses.push(guess);
   const result = evaluateGuess(guess);
   revealRow(currentRow, result);
